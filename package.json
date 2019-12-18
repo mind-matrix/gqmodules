@@ -1,0 +1,28 @@
+{
+  "name": "gqmodules",
+  "version": "1.0.0",
+  "description": "A GQ Watcher Builder for analysing GraphQL queries on a specific Entity.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mind-matrix/gqmodules.git"
+  },
+  "keywords": [
+    "GQ",
+    "GraphQL",
+    "GQWatcher",
+    "watch"
+  ],
+  "author": "Sagnik Modak",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mind-matrix/gqmodules/issues"
+  },
+  "homepage": "https://github.com/mind-matrix/gqmodules#readme",
+  "dependencies": {
+    "commander": "^4.0.1"
+  }
+}

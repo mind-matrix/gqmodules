@@ -1,0 +1,9 @@
+{
+    "description": "A GQ Watcher Builder for analysing GraphQL queries on a specific Entity.",
+    "command": "watch",
+    "alias": "w",
+    "files": [
+        "index.js",
+        "BuildWatcher.js"
+    ]
+}

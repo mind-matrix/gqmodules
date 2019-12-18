@@ -1,0 +1,9 @@
+{
+    "description": "A GraphQL Definition Parser.",
+    "command": "parse",
+    "alias": "p",
+    "files": [
+        "index.js",
+        "Parser.js"
+    ]
+}
