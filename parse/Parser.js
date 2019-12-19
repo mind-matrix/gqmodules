@@ -6,9 +6,14 @@ const fs = require('fs');
 const path = require('path');
 const Mongoose = require('mongoose');
 const GraphQL = require('graphql');
+const { GraphQLDate, GraphQLTime, GraphQLDateTime } = require('graphql-iso-date');
 const beautify = require('js-beautify').js;
 
 String.prototype.replaceAll = function(f,r){return this.split(f).join(r);};
+
+GraphQL.GraphQLDate = GraphQLDate;
+GraphQL.GraphQLTime = GraphQLTime;
+GraphQL.GraphQLDateTime = GraphQLDateTime;
 
 class Parser {
 
@@ -135,20 +140,21 @@ class Parser {
                 if(ast[key][0] === 'PasswordHash') {
                     model.inputDefinition += key + ':{ type: GraphQL.GraphQLList(GraphQL.GraphQLString) },';
                     passwordFields.arrays.push(key);
-                    continue;
                 }
-                var bindings = Parser.GetGQLBindings(key, ast[key][0], modelName);
-                bindings.inputType = "type: GraphQL.GraphQLList(" + bindings.inputType + ")";
-                bindings.type = "type: GraphQL.GraphQLList(" + bindings.type + ")";
-                if(bindings.requiresResolve) {
-                    bindings.type += `,
-                    resolve(parent, args) {
-                        var list = [];
-                        parent.` + key + `.forEach((v,i) => {
-                            list.push(Models.` + ast[key][0] + `.findOne({ _id: v._id }));
-                        });
-                        return list;
-                    }`;
+                else {
+                    var bindings = Parser.GetGQLBindings(key, ast[key][0], modelName);
+                    bindings.inputType = "type: GraphQL.GraphQLList(" + bindings.inputType + ")";
+                    bindings.type = "type: GraphQL.GraphQLList(" + bindings.type + ")";
+                    if(bindings.requiresResolve) {
+                        bindings.type += `,
+                        resolve(parent, args) {
+                            var list = [];
+                            parent.` + key + `.forEach((v,i) => {
+                                list.push(Models.` + ast[key][0] + `.findOne({ _id: v._id }));
+                            });
+                            return list;
+                        }`;
+                    }
                 }
             }
             else if(typeof ast[key] === 'object' && ast[key] !== null) {
@@ -163,17 +169,18 @@ class Parser {
                 if(ast[key] === 'PasswordHash') {
                     model.inputDefinition += key + ':{ type: GraphQL.GraphQLString },';
                     passwordFields.singulars.push(key);
-                    continue;
                 }
-                var bindings = Parser.GetGQLBindings(key, ast[key], modelName);
-                bindings.inputType = "type: " + bindings.inputType;
-                bindings.type = "type: " + bindings.type;
-                if(bindings.requiresResolve) {
-                    bindings.type += `,
-                    resolve(parent, args) {
-                        return Models.` + ast[key] + `.findOne({ _id: parent.` + key + `._id });
-                    },
-                    `;
+                else {
+                    var bindings = Parser.GetGQLBindings(key, ast[key], modelName);
+                    bindings.inputType = "type: " + bindings.inputType;
+                    bindings.type = "type: " + bindings.type;
+                    if(bindings.requiresResolve) {
+                        bindings.type += `,
+                        resolve(parent, args) {
+                            return Models.` + ast[key] + `.findOne({ _id: parent.` + key + `._id });
+                        },
+                        `;
+                    }
                 }
             }
 

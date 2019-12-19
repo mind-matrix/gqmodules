@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/mind-matrix/gqmodules#readme",
   "dependencies": {
-    "commander": "^4.0.1"
+    "commander": "^4.0.1",
+    "graphql-iso-date": "^3.6.1"
   }
 }
