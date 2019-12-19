@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const Mongoose = require('mongoose');
 const GraphQL = require('graphql');
+const { GraphQLDate, GraphQLTime, GraphQLDateTime } = require('graphql-iso-date');
 const beautify = require('js-beautify').js;
 
 String.prototype.replaceAll = function(f,r){return this.split(f).join(r);};
@@ -86,7 +87,7 @@ class Parser {
     }
     
     _bakeGQLModelCode(modelName, model) {
-        var text = "var GraphQL = require('graphql'); var Models = require('../models'); const " + modelName + "Type = new GraphQL.GraphQLObjectType({ name: '" + modelName + "', fields: () => (" + model.definition + ") });\
+        var text = "var GraphQL = require('graphql'); var { GraphQLDate, GraphQLTime, GraphQLDateTime } = require('graphql-iso-date'); var Models = require('../models'); const " + modelName + "Type = new GraphQL.GraphQLObjectType({ name: '" + modelName + "', fields: () => (" + model.definition + ") });\
         const " + modelName + "InputType = new GraphQL.GraphQLInputObjectType({ name: '" + modelName + "Input', fields: () => (" + model.inputDefinition + ") });";
         text += 'module.exports = { '+ modelName + 'Type, '+ modelName + 'InputType };' + model.require.join(";") + ";";
         return beautify(text, { indent_size: 2, space_in_empty_paren: true });
@@ -264,15 +265,16 @@ class Parser {
     static GetGQLBindings(field, type, modelName) {
         if(GraphQL.hasOwnProperty("GraphQL" + type))
             return { type: "GraphQL.GraphQL" + type, inputType: "GraphQL.GraphQL" + type };
-        else if(type === modelName)
+        if(type === modelName)
             return { type: type + 'Type', inputType: type + 'InputType', requiresResolve: true };
-        else
-            return {
-                type: type + 'Type',
-                inputType: type + 'InputType',
-                require: ['const {' + type + 'Type, ' + type + 'InputType} = require("./' + type +'.js")'],
-                requiresResolve: true
-            };
+        if(['Date','Time','DateTime'].includes(type))
+            return { type: 'GraphQL' + type, inputType: 'GraphQL' + type };
+        return {
+            type: type + 'Type',
+            inputType: type + 'InputType',
+            require: ['const {' + type + 'Type, ' + type + 'InputType} = require("./' + type +'.js")'],
+            requiresResolve: true
+        };
     }
 
     static GetMongooseBindings( field, type, modelName, isArray = false ) {
@@ -310,6 +312,8 @@ class Parser {
         }
         if(Mongoose.Schema.Types.hasOwnProperty(type))
             return { type: type };
+        if(['Date','Time','DateTime'].includes(type))
+            return { type: 'Mongoose.Schema.Types.Date' };
         var returnType = '{ _id: Mongoose.Schema.Types.ObjectId }';
         var methods = {};
         methods["get" + field] = `function(_id) {
