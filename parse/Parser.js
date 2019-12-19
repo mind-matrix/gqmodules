@@ -48,7 +48,7 @@ class Parser {
         return beautify(text);
     }
     static GetGQLCompiler(types, queries, mutations) {
-        var text = 'var GraphQL = require("graphql"); var Models = require("../models"); ';
+        var text = 'var GraphQL = require("graphql"); var { GraphQLDate, GraphQLTime, GraphQLDateTime } = require("graphql-iso-date"); var Models = require("../models"); ';
         for(var type of types) {
             text += 'const { ' + type + 'Type, ' + type + 'InputType } = require("./' + type + '.js");';
         }
