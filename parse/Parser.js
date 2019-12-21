@@ -99,7 +99,7 @@ class Parser {
         for(var key in ast) {
             if(Array.isArray(ast[key])) {
                 var bindings = Parser.GetMongooseBindings(key, ast[key][0], modelName, true);
-                bindings.type = "[" + bindings.type + "]";
+                bindings.type = `[${bindings.type}]`;
             }
             else if(typeof ast[key] === 'object' && ast[key] !== null) {
                 var submodel = this._buildModel(modelName, ast[key]);
@@ -124,7 +124,16 @@ class Parser {
                 for(var [name, method] of Object.entries(bindings.methods))
                     model.methods[name] = method;
             }
-            model.definition += key + ':' + bindings.type + ',';
+            model.definition += 
+            `${key}: {
+                type: ${bindings.type},
+                required: ${!bindings.nullable},
+                ${
+                    bindings.unique ?
+                    'index: true, unique: true':''
+                }
+            }
+            `;
         }
         model.definition += '}';
         return model;
@@ -314,8 +323,11 @@ class Parser {
     }
 
     static GetMongooseBindings( field, type, modelName, isArray = false ) {
+        var nullable = !type.endsWith("!");
+        var unique = type.startsWith("@");
+        type = type.replace(/[@!]/g, '');
         if(["Int","Float"].includes(type))
-            return { type: "Number" };
+            return { type: "Number", unique: unique, nullable: nullable };
         if(type === 'PasswordHash') {
             var methods = {};
             if(isArray) {
@@ -343,7 +355,9 @@ class Parser {
             return {
                 type: '{ hash: String, salt: String }',
                 methods: methods,
-                require: ['const crypto = require("crypto")']
+                require: ['const crypto = require("crypto")'],
+                unique: unique,
+                nullable: nullable
             };
         }
         if(Mongoose.Schema.Types.hasOwnProperty(type))
@@ -359,7 +373,9 @@ class Parser {
         return {
             type: returnType,
             methods: methods,
-            require: require
+            require: require,
+            unique: unique,
+            nullable: nullable
         };
     }
 }
