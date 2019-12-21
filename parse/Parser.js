@@ -125,11 +125,7 @@ class Parser {
                 for(var [name, method] of Object.entries(bindings.methods))
                     model.methods[name] = method;
             }
-            model.definition += 
-            `${key}: {
-                type: ${bindings.type}${bindings.unique ?',index: true, unique: true':''}
-            },
-            `;
+            model.definition += `${key}: ${bindings.type},`;
         }
         model.definition += '}';
         return model;
@@ -283,9 +279,9 @@ class Parser {
     }
 
     static GetGQLBindings(field, type, modelName) {
-        /* var nullable = !type.endsWith("!");
+        var nullable = !type.endsWith("!");
         var unique = type.startsWith("@");
-        type = type.replace(/[@!]/g, ''); */
+        type = type.replace(/[@!]/g, '');
         if(GraphQL.hasOwnProperty("GraphQL" + type))
             return {
                 type: `GraphQL.GraphQL${type}`,
@@ -319,9 +315,9 @@ class Parser {
     }
 
     static GetMongooseBindings( field, type, modelName, isArray = false ) {
-        /* var nullable = !type.endsWith("!");
+        var nullable = !type.endsWith("!");
         var unique = type.startsWith("@");
-        type = type.replace(/[@!]/g, ''); */
+        type = type.replace(/[@!]/g, '');
         if(["Int","Float"].includes(type))
             return { type: "Number", unique: unique, nullable: nullable };
         if(type === 'PasswordHash') {
