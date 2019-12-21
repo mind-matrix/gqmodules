@@ -107,7 +107,7 @@ class Parser {
                     require: submodel.require.filter((v) => !model.require.includes(v)),
                     type: submodel.definition,
                     methods: {},
-                    skipRequired: true
+                    nullable: true
                 };
                 if(submodel.methods) {
                     for(var [name, method] of Object.entries(submodel.methods)) {
@@ -127,12 +127,7 @@ class Parser {
             }
             model.definition += 
             `${key}: {
-                type: ${bindings.type}
-                ${ bindings.skipRequired ? '': `,required: ${!(bindings.nullable)}`}
-                ${
-                    bindings.unique ?
-                    ',index: true, unique: true':''
-                }
+                type: ${bindings.type}${ bindings.nullable ? '': ',required: true'}${bindings.unique ?',index: true, unique: true':''}
             },
             `;
         }
