@@ -125,7 +125,11 @@ class Parser {
                 for(var [name, method] of Object.entries(bindings.methods))
                     model.methods[name] = method;
             }
-            model.definition += `${key}: ${bindings.type},`;
+            model.definition += 
+            `${key}: {
+                type: ${bindings.type}${ bindings.nullable ? '': ',required: true'}${bindings.unique ?',index: true, unique: true':''}
+            },
+            `;
         }
         model.definition += '}';
         return model;
