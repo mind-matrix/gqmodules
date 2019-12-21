@@ -132,7 +132,7 @@ class Parser {
                     bindings.unique ?
                     'index: true, unique: true':''
                 }
-            }
+            },
             `;
         }
         model.definition += '}';
