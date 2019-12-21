@@ -127,11 +127,12 @@ class Parser {
             }
             model.definition += 
             `${key}: {
-                type: ${bindings.type}${ bindings.nullable ? '': ',required: true'}${bindings.unique ?',index: true, unique: true':''}
+                type: ${bindings.type}${bindings.nullable?'':',required: true'}${bindings.unique?',index: true, unique: true':''}
             },
             `;
         }
         model.definition += '}';
+        console.log(model.definition);
         return model;
     }
 
