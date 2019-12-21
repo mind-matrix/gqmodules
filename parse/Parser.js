@@ -135,6 +135,7 @@ class Parser {
         model.definition = '{ _id: { type: GraphQL.GraphQLID },';
         model.inputDefinition = '{';
         var passwordFields = { singulars: [], arrays: [] };
+        var uniqueFields = [];
         for(var key in ast) {
             if(Array.isArray(ast[key])) {
                 if(ast[key][0] === 'PasswordHash') {
@@ -143,8 +144,10 @@ class Parser {
                     continue;
                 }
                 var bindings = Parser.GetGQLBindings(key, ast[key][0], modelName);
-                bindings.inputType = "type: GraphQL.GraphQLList(" + bindings.inputType + ")";
-                bindings.type = "type: GraphQL.GraphQLList(" + bindings.type + ")";
+                bindings.inputType = `type: ${bindings.nullable?`GraphQL.GraphQLList(${bindings.inputType})`:`GraphQL.GraphQLNonNull(GraphQL.GraphQLList(${bindings.inputType}))`}`;
+                bindings.type = `type: ${bindings.nullable?`GraphQL.GraphQLList(${bindings.type})`:`GraphQL.GraphQLNonNull(GraphQL.GraphQLList(${bindings.type}))`}`;
+                if(bindings.unique)
+                    uniqueFields.push({ name: key, typedef: bindings.type });
                 if(bindings.requiresResolve) {
                     bindings.type += `,
                     resolve(parent, args) {
@@ -171,8 +174,10 @@ class Parser {
                     continue;
                 }
                 var bindings = Parser.GetGQLBindings(key, ast[key], modelName);
-                bindings.inputType = "type: " + bindings.inputType;
-                bindings.type = "type: " + bindings.type;
+                bindings.inputType = `type: ${bindings.nullable?`${bindings.inputType}`:`GraphQL.GraphQLNonNull(${bindings.inputType})`}`;
+                bindings.type = `type: ${bindings.nullable?`${bindings.type}`:`GraphQL.GraphQLNonNull(${bindings.type})`}`;
+                if(bindings.unique)
+                    uniqueFields.push({ name: key, typedef: bindings.type });
                 if(bindings.requiresResolve) {
                     bindings.type += `,
                     resolve(parent, args) {
@@ -190,13 +195,23 @@ class Parser {
         model.definition += '}';
         model.inputDefinition += '}';
         model.query = `{
-            type: ` + modelName + `Type,
-            args: { _id: { type: GraphQL.GraphQLID } },
+            type: ${modelName}Type,
+            args: {
+                _id: { type: GraphQL.GraphQLID },
+                ${ uniqueFields.map((f) => `${f.name}: { ${f.typedef} }`).join(",") }
+            },
             resolve(parent, args) {
-                return Models.` + modelName + `.findOne({ _id: args._id });
+                if(args._id)
+                    return Models.${modelName}.findOne({ _id: args._id });
+                ${
+                    uniqueFields.map((f) =>
+                    `else if(args.${f.name})
+                        return Models.${modelName}.findOne({ ${f.name}: args.${f.name} });
+                    `
+                    ).join("")
+                }
             }
-        }
-        `;
+        }`;
 
         // Replacement policy needs perfecting
         model.mutation.add = `{
@@ -263,17 +278,38 @@ class Parser {
     }
 
     static GetGQLBindings(field, type, modelName) {
+        var nullable = !type.endsWith("!");
+        var unique = type.startsWith("@");
+        type = type.replace(/[@!]/g, '');
         if(GraphQL.hasOwnProperty("GraphQL" + type))
-            return { type: "GraphQL.GraphQL" + type, inputType: "GraphQL.GraphQL" + type };
+            return {
+                type: `GraphQL.GraphQL${type}`,
+                inputType: `GraphQL.GraphQL${type}`,
+                nullable: nullable,
+                unique: unique
+            };
         if(type === modelName)
-            return { type: type + 'Type', inputType: type + 'InputType', requiresResolve: true };
+            return {
+                type: `${type}Type`,
+                inputType: `${type}InputType`,
+                requiresResolve: true,
+                nullable: nullable,
+                unique: unique
+            };
         if(['Date','Time','DateTime'].includes(type))
-            return { type: 'GraphQL' + type, inputType: 'GraphQL' + type };
+            return {
+                type: `GraphQL${type}`,
+                inputType: `GraphQL${type}`,
+                nullable: nullable,
+                unique: unique
+            };
         return {
-            type: type + 'Type',
-            inputType: type + 'InputType',
-            require: ['const {' + type + 'Type, ' + type + 'InputType} = require("./' + type +'.js")'],
-            requiresResolve: true
+            type: `${type}Type`,
+            inputType: `${type}InputType`,
+            require: [`const {${type}Type, ${type}InputType} = require("./${type}.js")`],
+            requiresResolve: true,
+            nullable: nullable,
+            unique: unique
         };
     }
 
