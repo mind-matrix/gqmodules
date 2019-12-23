@@ -145,10 +145,10 @@ class Parser {
                     continue;
                 }
                 var bindings = Parser.GetGQLBindings(key, ast[key][0], modelName);
-                bindings.inputType = `type: ${bindings.nullable?`GraphQL.GraphQLList(${bindings.inputType})`:`GraphQL.GraphQLNonNull(GraphQL.GraphQLList(${bindings.inputType}))`}`;
-                bindings.type = `type: ${bindings.nullable?`GraphQL.GraphQLList(${bindings.type})`:`GraphQL.GraphQLNonNull(GraphQL.GraphQLList(${bindings.type}))`}`;
                 if(bindings.unique)
                     uniqueFields.push({ name: key, typedef: bindings.type });
+                bindings.inputType = `type: ${bindings.nullable?`GraphQL.GraphQLList(${bindings.inputType})`:`GraphQL.GraphQLNonNull(GraphQL.GraphQLList(${bindings.inputType}))`}`;
+                bindings.type = `type: ${bindings.nullable?`GraphQL.GraphQLList(${bindings.type})`:`GraphQL.GraphQLNonNull(GraphQL.GraphQLList(${bindings.type}))`}`;
                 if(bindings.requiresResolve) {
                     bindings.type += `,
                     resolve(parent, args) {
@@ -175,10 +175,10 @@ class Parser {
                     continue;
                 }
                 var bindings = Parser.GetGQLBindings(key, ast[key], modelName);
-                bindings.inputType = `type: ${bindings.nullable?`${bindings.inputType}`:`GraphQL.GraphQLNonNull(${bindings.inputType})`}`;
-                bindings.type = `type: ${bindings.nullable?`${bindings.type}`:`GraphQL.GraphQLNonNull(${bindings.type})`}`;
                 if(bindings.unique)
                     uniqueFields.push({ name: key, typedef: bindings.type });
+                bindings.inputType = `type: ${bindings.nullable?`${bindings.inputType}`:`GraphQL.GraphQLNonNull(${bindings.inputType})`}`;
+                bindings.type = `type: ${bindings.nullable?`${bindings.type}`:`GraphQL.GraphQLNonNull(${bindings.type})`}`;
                 if(bindings.requiresResolve) {
                     bindings.type += `,
                     resolve(parent, args) {
@@ -199,7 +199,7 @@ class Parser {
             type: ${modelName}Type,
             args: {
                 _id: { type: GraphQL.GraphQLID },
-                ${ uniqueFields.map((f) => `${f.name}: { ${f.typedef} }`).join(",") }
+                ${ uniqueFields.map((f) => `${f.name}: { type: ${f.typedef} }`).join(",") }
             },
             resolve(parent, args) {
                 if(args._id)
