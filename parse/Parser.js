@@ -344,7 +344,7 @@ class Parser {
                 }`;
             }
             return {
-                type: '{ hash: { type: String }, salt: { type: String } }',
+                type: '{ hash: String, salt: String }',
                 methods: methods,
                 require: ['const crypto = require("crypto")']
             };
