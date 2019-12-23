@@ -125,11 +125,7 @@ class Parser {
                 for(var [name, method] of Object.entries(bindings.methods))
                     model.methods[name] = method;
             }
-            model.definition += 
-            `${key}: {
-                type: ${bindings.type}${bindings.nullable?'':',required: true'}${bindings.unique?',index: true, unique: true':''}
-            },
-            `;
+            model.definition += `${key}: ${bindings.type},`;
         }
         model.definition += '}';
         console.log(model.definition);
@@ -320,11 +316,9 @@ class Parser {
     }
 
     static GetMongooseBindings( field, type, modelName, isArray = false ) {
-        var nullable = !type.endsWith("!");
-        var unique = type.startsWith("@");
         type = type.replace(/[@!]/g, '');
         if(["Int","Float"].includes(type))
-            return { type: "Number", unique: unique, nullable: nullable };
+            return { type: "Number" };
         if(type === 'PasswordHash') {
             var methods = {};
             if(isArray) {
@@ -350,11 +344,9 @@ class Parser {
                 }`;
             }
             return {
-                type: 'Map',
+                type: '{ hash: { type: String }, salt: { type: String } }',
                 methods: methods,
-                require: ['const crypto = require("crypto")'],
-                unique: unique,
-                nullable: nullable
+                require: ['const crypto = require("crypto")']
             };
         }
         if(Mongoose.Schema.Types.hasOwnProperty(type))
@@ -370,9 +362,7 @@ class Parser {
         return {
             type: returnType,
             methods: methods,
-            require: require,
-            unique: unique,
-            nullable: nullable
+            require: require
         };
     }
 }
