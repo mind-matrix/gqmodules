@@ -128,7 +128,6 @@ class Parser {
             model.definition += `${key}: ${bindings.type},`;
         }
         model.definition += '}';
-        console.log(model.definition);
         return model;
     }
 
@@ -216,6 +215,7 @@ class Parser {
         }`;
 
         // Replacement policy needs perfecting
+        console.log(uniqueFields);
         model.mutation.add = `{
             type: ` + modelName + `Type,
             args: ` + model.inputDefinition.replaceAll("'" + modelName, "'" + 'Add' + modelName) + `,
@@ -277,10 +277,24 @@ class Parser {
         }`;
         model.mutation.remove = `{
             type: ` + modelName + `Type,
-            args: { _id: { type: GraphQL.GraphQLID } },
+            args: {
+                _id: { type: GraphQL.GraphQLID },
+                ${ uniqueFields.map((f) => `${f.name}: { ${f.typedef} }`).join(",") }
+            },
             resolve(parent, args) {
-                var doc = Models.` + modelName + `.findOne({ _id: args._id });
-                Models.` + modelName + `.deleteOne({ _id: args._id });
+                if(args._id) {
+                    var doc = Models.${modelName}.findOne({ _id: args._id });
+                    Models.${modelName}.deleteOne({ _id: args._id });
+                }
+                ${
+                    uniqueFields.map((f) =>
+                    `else if(args.${f.name}) {
+                        var doc = Models.${modelName}.findOne({ ${f.name}: args.${f.name} });
+                        Models.${modelName}.deleteOne({ ${f.name}: args.${f.name} });
+                    }
+                    `
+                    ).join("")
+                }
                 return doc;
             }
         }`;
