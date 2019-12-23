@@ -225,8 +225,9 @@ class Parser {
                 ${
                     uniqueFields.map((f) =>
                     `if(await Models.${modelName}.exists({${f.name}: args.${f.name}}))
-                        throw new Error("${modelName} with identical ${f.name} already exists");`
-                    ).join("else ")
+                        throw new Error("${modelName} with identical ${f.name} already exists");
+                    `
+                    ).join("")
                 }
 
                ${
