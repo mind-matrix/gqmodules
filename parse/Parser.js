@@ -219,8 +219,15 @@ class Parser {
         model.mutation.add = `{
             type: ` + modelName + `Type,
             args: ` + model.inputDefinition.replaceAll("'" + modelName, "'" + 'Add' + modelName) + `,
-            resolve(parent, args) {
+            async resolve(parent, args) {
                 /* TODO: Make appropriate changes */
+                
+                ${
+                    uniqueFields.map((f) =>
+                    `if(await Models.${modelName}.exists({${f.name}: args.${f.name}}))
+                        throw new Error("${modelName} with identical ${f.name} already exists");`
+                    ).join("else ")
+                }
 
                ${
                    passwordFields.singulars.map((field) => `var ${field} = args.${field}; delete args.${field};`).join("")
@@ -235,7 +242,7 @@ class Parser {
                    `).join("")
                }
 
-                let doc = Models.` + modelName +  `(args);
+                let doc = Models.${modelName}(args);
 
                 ${
                     passwordFields.singulars.map((field) => `doc.set${field}(${field});`)
