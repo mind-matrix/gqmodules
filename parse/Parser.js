@@ -215,7 +215,6 @@ class Parser {
         }`;
 
         // Replacement policy needs perfecting
-        console.log(uniqueFields);
         model.mutation.add = `{
             type: ` + modelName + `Type,
             args: ` + model.inputDefinition.replaceAll("'" + modelName, "'" + 'Add' + modelName) + `,
@@ -298,6 +297,7 @@ class Parser {
                 return doc;
             }
         }`;
+        console.log(model);
         return model;
     }
 
