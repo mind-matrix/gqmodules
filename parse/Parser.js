@@ -216,8 +216,8 @@ class Parser {
 
         // Replacement policy needs perfecting
         model.mutation.add = `{
-            type: ` + modelName + `Type,
-            args: ` + model.inputDefinition.replaceAll("'" + modelName, "'" + 'Add' + modelName) + `,
+            type: ${modelName}Type,
+            args: ${model.inputDefinition.replaceAll("'" + modelName, "'" + 'Add' + modelName)},
             async resolve(parent, args) {
                 /* TODO: Make appropriate changes */
                 
@@ -258,27 +258,27 @@ class Parser {
             }
         }`;
         model.mutation.update = `{
-            type: ` + modelName + `Type,
+            type: ${modelName}Type,
             args: {
                 _id: { type: GraphQL.GraphQLID },
                 changes: {
                     type: new GraphQL.GraphQLInputObjectType({
-                        name: "Update` + modelName + `ChangesInput",
-                        fields: ` + model.inputDefinition.replaceAll("'" + modelName, "'" + 'Update' + modelName + 'Changes')  + `
+                        name: "Update${modelName}ChangesInput",
+                        fields: ${model.inputDefinition.replaceAll("'" + modelName, "'" + 'Update' + modelName + 'Changes')}
                     })
                 }
             },
             async resolve(parent, args) {
                 /* TODO: Make appropriate changes */
-                await Models.` + modelName + `.updateOne({ _id: args._id }, { $set: args.changes });
-                return Models.` + modelName + `.findOne({ _id: args._id });
+                await Models.${modelName}.updateOne({ _id: args._id }, { $set: args.changes });
+                return Models.${modelName}.findOne({ _id: args._id });
             }
         }`;
         model.mutation.remove = `{
-            type: ` + modelName + `Type,
+            type: ${modelName}Type,
             args: {
                 _id: { type: GraphQL.GraphQLID },
-                ${ uniqueFields.map((f) => `${f.name}: { ${f.typedef} }`).join(",") }
+                ${ uniqueFields.map((f) => `${f.name}: { type: ${f.typedef} }`).join(",") }
             },
             resolve(parent, args) {
                 if(args._id) {
@@ -297,7 +297,6 @@ class Parser {
                 return doc;
             }
         }`;
-        console.log(model);
         return model;
     }
 
@@ -377,10 +376,10 @@ class Parser {
             return { type: 'Mongoose.Schema.Types.Date' };
         var returnType = '{ _id: Mongoose.Schema.Types.ObjectId }';
         var methods = {};
-        methods["get" + field] = `function(_id) {
-            return ` + field +`.findOne({ _id });
+        methods[`get${field}`] = `function(_id) {
+            return ${field}.findOne({ _id });
         }`;
-        var require = (type === modelName) ? [] : ['const ' + field + ' = require("./' + type + '.js")'];
+        var require = (type === modelName) ? [] : [`const ${field} = require("./${type}.js")`];
         return {
             type: returnType,
             methods: methods,
